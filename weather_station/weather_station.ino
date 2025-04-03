@@ -47,7 +47,7 @@ const int wet = 1500; // value for wet sensor
 
 
 // DEFINE THE CONTROL PINS FOR THE DHT22
-#define DHTPIN 33
+#define DHTPIN 4
 #define DHTTYPE DHT22
 
 // DEFINE BMP280 PINS
@@ -55,7 +55,7 @@ const int wet = 1500; // value for wet sensor
 
 
 // DEFINE SOIL SENSOR PINS
-#define SSPIN 35
+#define SSPIN 32
 
 // DEFINE TFT PINS
 #define TFT_DC    17

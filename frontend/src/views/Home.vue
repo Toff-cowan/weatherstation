@@ -1,9 +1,5 @@
-
 <template>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gidole&display=swap" rel="stylesheet">
-  <div class="background">
+  
   <VContainer class="fill-height ">
     <VResponsive class="align-center text-center fill-height">
       <VImg height="350" class="mb-5" src="@/assets/logo.svg" />
@@ -63,7 +59,7 @@
       </VRow>
     </VResponsive>
   </VContainer>
-</div>
+
 </template>
 
 <script setup>
@@ -77,18 +73,15 @@
 
 // FUNCTIONS
 onMounted(()=>{
-   
+  setTimeout(() => {
+        alert("The page will refresh in  5 minutes");
+    }, 1000);
+    setInterval(() => {
+        location.reload();
+    }, 300000);
 });
 
 onBeforeUnmount(()=>{ 
   
 });
 </script>
-
-<style scoped>
-.background {
-    background-image: linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),url(C:\Users\cowan\Documents\weather_station\frontend\src\styles\pexels-pixabay-459451.jpg);
-    background-size: cover;
-}
-
-</style>

@@ -7,42 +7,69 @@
         <!-- Cards Row -->
         <v-row class="d-flex justify-center mb-5" style="max-width: 1200px;">
             <v-col cols="2" v-for="(item, index) in cards" :key="index">
-                <v-card class="hover-effect bold-card" color="primaryContainer" height="150px">
-                    <v-card-item>
-                        <v-card-title class="small-title">{{ item.title }}</v-card-title>
-                        <br>
-                        <span class="value">{{ item.value }}</span>
-                        <br>
-                        <span v-if="item.conversion" class="conversion">{{ item.conversion }}</span>
-                    </v-card-item>
-                </v-card>
+                <div v-if="item.title === 'HUMIDITY' || item.title === 'SOIL MOISTURE'" class="moisture-card hover-effect">
+                    <v-card class="bold-card" color="primaryContainer" height="150px">
+                        <v-card-item>
+                            <v-icon size="30">{{ item.icon }}</v-icon>
+                            <v-card-title class="small-title">{{ item.title }}</v-card-title>
+                            <br>
+                            <span class="value">{{ item.value }}</span>
+                        </v-card-item>
+                    </v-card>
+                    <div v-if="item.title === 'SOIL MOISTURE'" class="wave"></div>
+                </div>
+                <div v-else class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <v-card class="hover-effect bold-card" color="primaryContainer" height="150px">
+                                <v-card-item>
+                                    <v-icon size="30">{{ item.icon }}</v-icon>
+                                    <v-card-title class="small-title">{{ item.title }}</v-card-title>
+                                    <br>
+                                    <span class="value">{{ item.value }}</span>
+                                </v-card-item>
+                            </v-card>
+                        </div>
+                        <div class="flip-card-back">
+                            <v-card class="hover-effect bold-card" color="primaryContainer" height="150px">
+                                <v-card-item>
+                                    <v-icon size="30">{{ item.icon }}</v-icon>
+                                    <v-card-title class="small-title">{{ item.title }}</v-card-title>
+                                    <br>
+                                    <span class="value">{{ item.conversion }}</span>
+                                </v-card-item>
+                            </v-card>
+                        </div>
+                    </div>
+                </div>
             </v-col>
         </v-row>
         
         <!-- Graphs Row -->
-        <v-row class="d-flex justify-start" style="max-width: 1200px;">
-            <v-col cols="12">
-                <v-card>
-                    <v-card-title>Temperature Analysis (Live)</v-card-title>
-                    <v-card-text>
-                        <figure class="highcharts-figure">
-                            <div id="container"></div>
-                        </figure>
-                    </v-card-text>
-                </v-card>
-            </v-col>
-            
-            <v-col cols="12" class="mt-5">
-                <v-card>
-                    <v-card-title>Humidity Analysis (Live)</v-card-title>
-                    <v-card-text>
-                        <figure class="highcharts-figure">
-                            <div id="container1"></div>
-                        </figure>
-                    </v-card-text>
-                </v-card>
-            </v-col>
-        </v-row>
+        <v-row class="d-flex justify-center" style="max-width: 1200px;">
+    <v-col cols="6">
+        <v-card>
+            <v-card-title>Temperature Analysis (Live)</v-card-title>
+            <v-card-text>
+                <figure class="highcharts-figure">
+                    <div id="container"></div>
+                </figure>
+            </v-card-text>
+        </v-card>
+    </v-col>
+    
+    <v-col cols="6">
+        <v-card>
+            <v-card-title>Humidity Analysis (Live)</v-card-title>
+            <v-card-text>
+                <figure class="highcharts-figure">
+                    <div id="container1"></div>
+                </figure>
+            </v-card-text>
+        </v-card>
+    </v-col>
+</v-row>
+
 
         <!-- Moisture Table -->
         <v-row class="d-flex justify-center mt-5" style="max-width: 600px;">
@@ -50,23 +77,23 @@
                 <v-card>
                     <v-card-title>Moisture Changes</v-card-title>
                     <v-card-text>
-                        <v-table>
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>Moisture Increase</th>
-                                    <th>Moisture Decrease</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="entry in moistureData" :key="entry.timestamp">
-                                    <td>{{ entry.timestamp }}</td>
-                                    <td>{{ entry.increase }}</td>
-                                    <td>{{ entry.decrease }}</td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                    </v-card-text>
+    <v-table style="max-height: 300px; overflow-y: auto; display: block;">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Moisture Increase</th>
+                <th>Moisture Decrease</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="entry in visibleMoistureData" :key="entry.timestamp">
+                <td>{{ entry.timestamp }}</td>
+                <td>{{ entry.increase }}</td>
+                <td>{{ entry.decrease }}</td>
+            </tr>
+        </tbody>
+    </v-table>
+</v-card-text>
                 </v-card>
             </v-col>
         </v-row>
@@ -100,6 +127,7 @@ const shift = ref(false); // Delete a point from the left side and append a new 
 //const payload = ref({ temperature: 0, heatindex: 0, humidity: 0 });
 const tempHiChart = ref(null); // Chart object
 const HumidChart = ref(null); // Chart object
+const moistureHistory = ref([]);
 
 const CreateCharts = async () => { 
 // TEMPERATURE CHART 
@@ -158,24 +186,64 @@ color: Highcharts.getOptions().colors[0]
 
 // COMPUTED PROPERTIES
 const cards = computed(() => [
-    { title: "TEMPERATURE", value: `${payload.value.temperature.toFixed(2)} °C`, conversion: `${(payload.value.temperature * 9/5 + 32).toFixed(2)} °F` },
-    { title: "HEAT INDEX", value: `${payload.value.heatindex.toFixed(2)} °C`, conversion: `${(payload.value.heatindex * 9/5 + 32).toFixed(2)} °F` },
-    { title: "HUMIDITY", value: `${payload.value.humidity}%` },
-    { title: "PRESSURE", value: `${payload.value.pressure.toFixed(2)} hPa`, conversion: `${(payload.value.pressure * 0.02953).toFixed(2)} inHg` },
-    { title: "SOIL MOISTURE", value: `${payload.value.moisture.toFixed(2)} %` },
-    { title: "ALTITUDE", value: `${payload.value.altitude.toFixed(2)} m`, conversion: `${(payload.value.altitude * 3.28084).toFixed(2)} ft` }
+    { title: "TEMPERATURE", value: `${payload.value.temperature.toFixed(2)} °C`, conversion: `${(payload.value.temperature * 9/5 + 32).toFixed(2)} °F`, icon: "mdi-thermometer" },
+    { title: "HEAT INDEX", value: `${payload.value.heatindex.toFixed(2)} °C`, conversion: `${(payload.value.heatindex * 9/5 + 32).toFixed(2)} °F`, icon: "mdi-fire" },
+    { title: "HUMIDITY", value: `${payload.value.humidity}%`, icon: "mdi-water-percent" },
+    { title: "PRESSURE", value: `${payload.value.pressure.toFixed(2)} hPa`, conversion: `${(payload.value.pressure * 0.02953).toFixed(2)} inHg`, icon: "mdi-gauge" },
+    { title: "SOIL MOISTURE", value: `${payload.value.moisture.toFixed(2)} %`, conversion: "Moisture level", icon: "mdi-water" },
+    { title: "ALTITUDE", value: `${payload.value.altitude.toFixed(2)} m`, conversion: `${(payload.value.altitude * 3.28084).toFixed(2)} ft`, icon: "mdi-mountain" }
 ]);
 
-const moistureData = ref([
-    { timestamp: "12:00 PM", increase: "5%", decrease: "2%" },
-    { timestamp: "01:00 PM", increase: "4%", decrease: "3%" },
-]);
+const moistureData = computed(() => {
+    if (moistureHistory.value.length < 2) return [];
+
+    let lastIncrease = 0;
+    let lastDecrease = 0;
+
+    return moistureHistory.value.map((entry, index, arr) => {
+        if (index === 0) {
+            return {
+                timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString(),
+                increase: lastIncrease,
+                decrease: lastDecrease,
+            };
+        }
+
+        const prevMoisture = arr[index - 1].moisture;
+        const moistureDiff = entry.moisture - prevMoisture;
+
+        if (moistureDiff > 0) {
+            lastIncrease = `${moistureDiff.toFixed(2)}%`;
+            lastDecrease = "-";
+        } else if (moistureDiff < 0) {
+            lastDecrease = `${Math.abs(moistureDiff).toFixed(2)}%`;
+            lastIncrease = "-";
+        }
+
+        return {
+            timestamp: new Date(entry.timestamp * 10000).toLocaleTimeString(),
+            increase: lastIncrease,
+            decrease: lastDecrease,
+        };
+    });
+});
+const visibleMoistureData = computed(() => {
+    if (moistureHistory.value.length < 3) return moistureData.value;
+    return moistureData.value.slice(-3); // Show only the last 3 entries
+});
 // FUNCTIONS
 onMounted(()=>{
     // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
     CreateCharts();
     Mqtt.connect();
     setTimeout( ()=>{ Mqtt.subscribe("620164419")}, 3000);
+    setTimeout(() => {
+        alert("The page will refresh in  5 minutes");
+    }, 1000);
+    setInterval(() => {
+        location.reload();
+    }, 300000);
+
 });
 
 
@@ -194,6 +262,27 @@ tempHiChart.value.series[1].addPoint({y:parseFloat(data.heatindex.toFixed(2))
    ,x: data.timestamp * 1000 }, true,  shift.value);
 HumidChart.value.series[0].addPoint({y:parseFloat(data.humidity.toFixed(2)) ,x: data.timestamp * 1000 }, 
 true,  shift.value);  
+});
+watch(payload, (data) => {
+    const currentTimestamp = Math.floor(Date.now() / 1000); // Get current time in seconds
+
+    if (moistureHistory.value.length > 0) {
+        console.log(
+            `Previous Moisture: ${moistureHistory.value[moistureHistory.value.length - 1].moisture}, ` +
+            `New Moisture: ${data.moisture}`
+        );
+    }
+
+    // Store new moisture reading
+    moistureHistory.value.push({
+        timestamp: currentTimestamp,
+        moisture: parseFloat(data.moisture.toFixed(2))
+    });
+
+    // Keep only the last 100 records
+    if (moistureHistory.value.length > 100) {
+        moistureHistory.value.shift();
+    }
 });
 
 
@@ -224,6 +313,52 @@ figure{
 .conversion {
     font-size: 0.9em;
     opacity: 0.75;
+}
+.flip-card {
+    perspective: 1000px;
+}
+
+.flip-card-inner {
+    width: 100%;
+    height: 150px;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+.flip-card:hover .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+.moisture-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20%;
+    background: rgba(0, 150, 255, 0.5);
+    animation: wave-animation 2s infinite ease-in-out alternate;
+}
+
+@keyframes wave-animation {
+    0% { height: 20%; }
+    100% { height: 40%; }
 }
 </style>
 

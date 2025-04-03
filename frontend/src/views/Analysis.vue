@@ -1,9 +1,4 @@
-
 <template>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gidole&display=swap" rel="stylesheet">
-
   <v-container fluid class="bg-surface">
     <!-- First Row -->
     <v-row class="p-1" style="max-width: 1200px;">
@@ -96,6 +91,21 @@
           </v-card-item>
         </v-card>
       </v-col>
+       <!-- Pressure Card -->
+       <v-col cols="3" align="center">
+        <v-card title="Pressure" width="250" variant="outlined" color="navy" density="compact" rounded="lg" class="hover-effect">
+          <v-card-item class="mb-n5">
+            <v-chip-group class="d-flex flex-row justify-center" color="dandelion" variant="flat">
+              <v-chip>{{ pressure.min }}</v-chip>
+              <v-chip>{{ pressure.avg }}</v-chip>
+              <v-chip>{{ pressure.max }}</v-chip>
+            </v-chip-group>
+          </v-card-item>
+          <v-card-item align="center">
+            <span class="text-h1 text-primary font-weight-bold">{{ pressure.avg }}</span>
+          </v-card-item>
+        </v-card>
+      </v-col>
     </v-row>
 
     <!-- Second Row (Charts) -->
@@ -166,6 +176,7 @@ const start   = ref("");
 const end    = ref("");
 const temperature = reactive({"min":0,"max":0,"avg":0,"range":0});
 const humidity = reactive({"min":0,"max":0,"avg":0,"range":0});
+const pressure = reactive({"min": 0, "max": 0, "avg": 0});
 
 const CreateCharts = async () => {
 
@@ -484,11 +495,14 @@ const updateCards = async () => {
 onMounted(()=>{
   // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
   CreateCharts();
-  Mqtt.connect(); // Connect to Broker located on the backend
-  setTimeout( ()=>{
-      // Subscribe to each topic
-      //Mqtt.subscribe("620164419");
-  },3000);
+      Mqtt.connect();
+    setTimeout( ()=>{ Mqtt.subscribe("620164419")}, 3000);
+    setTimeout(() => {
+        alert("The page will refresh in  5 minutes");
+    }, 1000);
+    setInterval(() => {
+        location.reload();
+    }, 300000);
 });
 
 
@@ -505,5 +519,18 @@ onBeforeUnmount(()=>{
 
 <style scoped>
 /** CSS STYLE HERE */
+.hover-effect:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+v-card {
+  background-color: beige;
+  color: navy;
+}
+
+v-chip {
+  background-color: dandelion;
+}
 
 </style>
